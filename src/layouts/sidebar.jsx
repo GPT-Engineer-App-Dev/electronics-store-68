@@ -116,4 +116,12 @@ const SidebarNavLink = ({ to, children }) => (
   </NavLink>
 );
 
+const SearchBar = () => (
+  <input
+    type="text"
+    placeholder="Search products..."
+    className="w-full px-4 py-2 border rounded-md"
+  />
+);
+
 export default Layout;
