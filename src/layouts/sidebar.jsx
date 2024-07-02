@@ -1,3 +1,6 @@
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -10,7 +13,7 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { CircleUser, Menu, Package2 } from "lucide-react";
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { navItems } from "../App";
 
 const Layout = () => {
@@ -116,12 +119,52 @@ const SidebarNavLink = ({ to, children }) => (
   </NavLink>
 );
 
-const SearchBar = () => (
-  <input
-    type="text"
-    placeholder="Search products..."
-    className="w-full px-4 py-2 border rounded-md"
-  />
-);
+const SearchBar = () => {
+  const [query, setQuery] = useState("");
+  const navigate = useNavigate();
+
+  const { data: products, isLoading } = useQuery({
+    queryKey: ["products", query],
+    queryFn: async () => {
+      const response = await fetch(`/api/products?search=${query}`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    },
+    enabled: !!query,
+  });
+
+  return (
+    <div className="relative">
+      <Input
+        type="text"
+        placeholder="Search products..."
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        className="w-full px-4 py-2 border rounded-md"
+      />
+      {query && (
+        <div className="absolute left-0 right-0 mt-2 bg-white border rounded-md shadow-lg z-10">
+          {isLoading ? (
+            <div className="p-4">Loading...</div>
+          ) : (
+            <ul>
+              {products?.map((product) => (
+                <li
+                  key={product.id}
+                  className="p-4 cursor-pointer hover:bg-gray-100"
+                  onClick={() => navigate(`/products/${product.id}`)}
+                >
+                  {product.name}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 export default Layout;
